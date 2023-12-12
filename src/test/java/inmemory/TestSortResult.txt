@@ -1,0 +1,13 @@
+List Size:100000000
+Running Sequential Merge Sort
+Test Passed
+The test took 80420 millis
+=================================
+Running Sequential Quick Sort
+Test Passed
+The test took 32141 millis
+=================================
+Running Parallel Merge Sort
+Test Passed
+The test took 43632 millis
+=================================
