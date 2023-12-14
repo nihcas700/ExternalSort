@@ -20,7 +20,7 @@ test {
     useJUnitPlatform()
     minHeapSize = "128m" // initial heap size
     maxHeapSize = "4096m" // maximum heap size
-    jvmArgs '-XX:MaxPermSize=256m' // mem argument for the test JVM
+//    jvmArgs '-XX:MaxPermSize=256m' // mem argument for the test JVM
 }
 
 application {
