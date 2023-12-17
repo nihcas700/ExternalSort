@@ -1,162 +1,152 @@
 package diskbased;
 
+import diskbased.runnables.MergeSortedAndFlush;
+import diskbased.runnables.SortAndFlush;
 import inmemory.ParallelMergeSort;
 import inmemory.SequentialMergeSort;
 import inmemory.SequentialQuickSort;
 import inmemory.SortingAlgorithm;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static utils.Constants.PARALLEL_MS;
 import static utils.Constants.SEQUENTIAL_QS;
+import static utils.IntermediateFilesHelper.*;
 
 public class ExternalSort {
     private int inputChunkSize;
     private int outputBufferSize;
+    private int outputChunkSize;
     private String mergeSortImpl;
-    public ExternalSort(int inputChunkSize, int outputBufferSize, String mergeSortImpl) {
+    public ExternalSort(int inputChunkSize, int outputBufferSize, int outputChunkSize, String mergeSortImpl) {
         this.inputChunkSize = inputChunkSize;
         this.outputBufferSize = outputBufferSize;
+        this.outputChunkSize = outputChunkSize;
         this.mergeSortImpl = mergeSortImpl;
     }
     public void sort(final String intermediateFilePath, String inputFilePath, String outputPath) throws Exception {
-        BufferedReader reader = new BufferedReader(new FileReader(inputFilePath));
-        String line;
-        int counter = 1;
-        List<Integer> list = new ArrayList<>();
-        Map<String, ThreadMetadata> threadMetadata = new LinkedHashMap<>();
-        while ((line= reader.readLine()) != null) {
-            if (counter % inputChunkSize == 0) {
-                String fileName = (counter-inputChunkSize+1) + "-" + (counter) + "-output.txt";
-                BufferedWriter writer = new BufferedWriter(new FileWriter(Paths.get(intermediateFilePath, fileName).toString()), outputBufferSize);
+        divideAndSort(intermediateFilePath, inputFilePath);
+        mergeAndSort(intermediateFilePath, outputPath);
+    }
 
-                // Populate thread metadata
-                ThreadMetadata metadata = new ThreadMetadata();
-                SortingAlgorithm algorithm;
-                if (PARALLEL_MS.equals(mergeSortImpl)) {
-                    algorithm = new ParallelMergeSort();
-                } else if (SEQUENTIAL_QS.equals(mergeSortImpl)) {
-                    algorithm = new SequentialQuickSort();
-                } else {
-                    algorithm = new SequentialMergeSort();
-                }
-                metadata.setFuture(CompletableFuture
-                        .runAsync(new SortAndFlush(writer, list, algorithm, metadata))
-                        .exceptionally((ex) -> {
-                            System.out.println("Exception Occured in " + metadata.getFileName());
-                            ex.printStackTrace();
-                            return null;
-                        })
-                        .thenApply((result) -> {
-                            System.out.println("Thread " + metadata.getFileName() + " took " +
-                                    metadata.getRunTime() + " millis");
-                            return null;
-                        }));
-                metadata.setStartTime(System.currentTimeMillis());
-                metadata.setFileName(fileName);
-                threadMetadata.put(fileName, metadata);
-                list.clear();
+    private void mergeAndSort(final String intermediateFilePath, final String finalOutputPath) throws Exception {
+        long start = System.currentTimeMillis();
+        int layer = 0;
+        while (doLayerXFilesExist(intermediateFilePath, layer)) {
+            Map<String, ThreadMetadata> threadMetadata = new LinkedHashMap<>();
+            List<File> filesX = new ArrayList<>(getLayerXFiles(intermediateFilePath, layer).values());
+            System.out.println("Found " + filesX.size() + " files in layer " + layer);
+            if (filesX.size() == 1) {
+                Files.copy(Path.of(filesX.get(0).getPath()), Path.of(finalOutputPath), StandardCopyOption.REPLACE_EXISTING);
+                break;
             }
-            list.add(Integer.parseInt(line));
-            counter++;
+            int fileNo = 1;
+            for (int i = 0; i < filesX.size(); i+=2) {
+                BufferedReader firstReader = new BufferedReader(new FileReader(filesX.get(i)));
+                String outputFileName = getIntermediateFileName(fileNo, layer+1);
+                BufferedWriter writer = new BufferedWriter(new FileWriter(Paths.get(intermediateFilePath,
+                        outputFileName).toString()), outputBufferSize);
+                BufferedReader secondReader = null;
+                if (i+1 < filesX.size()) {
+                    secondReader = new BufferedReader(new FileReader(filesX.get(i+1)));
+                }
+                ThreadMetadata metadata = new ThreadMetadata();
+                metadata.setFileName(outputFileName);
+                threadMetadata.put(outputFileName, metadata);
+                metadata.setFuture(getMergeSortedFuture(firstReader, secondReader, writer, outputChunkSize, metadata));
+                fileNo++;
+            }
+            waitForThreadsToComplete(threadMetadata, layer);
+            layer++;
         }
+        long end = System.currentTimeMillis();
+        System.out.println("[mergeAndSort] Merge and sort took " + (end - start) + " millis");
+    }
+
+    private static void waitForThreadsToComplete(Map<String, ThreadMetadata> threadMetadata, final int layer) {
         CompletableFuture.allOf(threadMetadata.values().stream()
                 .map(ThreadMetadata::getFuture)
                 .collect(Collectors.toList())
                 .toArray(new CompletableFuture<?>[0])).thenApply(res -> {
-            System.out.println("Execution Done.");
+            int totalLines = threadMetadata.values().stream()
+                    .mapToInt(ThreadMetadata::getLinesProcessed)
+                    .sum();
+            System.out.println("Execution of layer " + layer + " done. Processed " + totalLines + "lines");
             return null;
         }).join();
     }
 
-    public static class ThreadMetadata {
-        public CompletableFuture<?> getFuture() {
-            return future;
-        }
-
-        public void setFuture(CompletableFuture<?> future) {
-            this.future = future;
-        }
-
-        public long getStartTime() {
-            return startTime;
-        }
-
-        public void setStartTime(long startTime) {
-            this.startTime = startTime;
-        }
-
-        public long getEndTime() {
-            return endTime;
-        }
-
-        public void setEndTime(long endTime) {
-            this.endTime = endTime;
-        }
-
-        public String getFileName() {
-            return fileName;
-        }
-
-        public void setFileName(String fileName) {
-            this.fileName = fileName;
-        }
-
-        private String fileName;
-        private CompletableFuture<?> future;
-        private long startTime;
-        private long endTime;
-
-        public long getRunTime() {
-            return runTime;
-        }
-
-        public void setRunTime(long runTime) {
-            this.runTime = runTime;
-        }
-
-        private long runTime;
+    private static CompletableFuture<Object> getMergeSortedFuture(BufferedReader firstReader, BufferedReader secondReader,
+                                                                  BufferedWriter writer, int bufferSize,
+                                                                  ThreadMetadata metadata) {
+        return CompletableFuture
+                .runAsync(new MergeSortedAndFlush(firstReader, secondReader, writer, bufferSize, metadata))
+                .exceptionally((ex) -> printException(metadata, ex))
+                .thenApply((result) -> printThreadMetadataDetails(metadata));
+    }
+    private static Void printThreadMetadataDetails(ThreadMetadata metadata) {
+        System.out.println("Thread " + metadata.getFileName() + " took " +
+                metadata.getRunTime() + " millis");
+        return null;
     }
 
-    public static class SortAndFlush implements Runnable {
-        private BufferedWriter writer;
-        private List<Integer> list;
-        private SortingAlgorithm sortImpl;
+    private static Void printException(ThreadMetadata metadata, Throwable ex) {
+        System.out.println("Exception Occurred in " + metadata.getFileName());
+        ex.printStackTrace();
+        return null;
+    }
 
-        private ThreadMetadata metadata;
-        public SortAndFlush(BufferedWriter writer, List<Integer> list, SortingAlgorithm sortImpl, ThreadMetadata metadata) {
-            this.writer = writer;
-            this.list = new ArrayList<>(list);
-            this.sortImpl = sortImpl;
-            this.metadata = metadata;
-        }
+    private void divideAndSort(String intermediateFilePath, String inputFilePath) throws IOException {
+        long start = System.currentTimeMillis();
+        BufferedReader reader = new BufferedReader(new FileReader(inputFilePath));
+        String line;
+        int counter = 1, fileNo = 1;
+        List<Integer> list = new ArrayList<>();
+        Map<String, ThreadMetadata> threadMetadata = new LinkedHashMap<>();
+        while ((line= reader.readLine()) != null) {
+            if (counter % inputChunkSize == 0) {
+                String fileName = getIntermediateFileName(fileNo, 0);
+                BufferedWriter writer = new BufferedWriter(new FileWriter(Paths.get(intermediateFilePath, fileName).toString()), outputBufferSize);
 
-        @Override
-        public void run() {
-            long start = System.currentTimeMillis();
-            sortImpl.sort(list);
-            for (Integer num : list) {
-                try {
-                    writer.write(num + "\n");
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                // Populate thread metadata
+                ThreadMetadata metadata = new ThreadMetadata();
+                metadata.setFileName(fileName);
+                threadMetadata.put(fileName, metadata);
+                metadata.setFuture(getSortAndFlushFuture(writer, list, metadata));
+                list.clear();
+                fileNo++;
             }
-            try {
-                writer.flush();
-                writer.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            long end = System.currentTimeMillis();
-            metadata.setRunTime(end-start);
+            list.add(Integer.parseInt(line));
+            counter++;
         }
+        waitForThreadsToComplete(threadMetadata, 0);
+        long end = System.currentTimeMillis();
+        System.out.println("[divideAndSort] Divide and sort took " + (end - start) + " millis");
+    }
+
+    private CompletableFuture<Object> getSortAndFlushFuture(BufferedWriter writer, List<Integer> list, ThreadMetadata metadata) {
+        return CompletableFuture
+                .runAsync(new SortAndFlush(writer, list, getSortingAlgorithm(mergeSortImpl), metadata))
+                .exceptionally((ex) -> printException(metadata, ex))
+                .thenApply((result) -> printThreadMetadataDetails(metadata));
+    }
+
+    private SortingAlgorithm getSortingAlgorithm(String mergeSortImpl) {
+        SortingAlgorithm algorithm;
+        if (PARALLEL_MS.equals(mergeSortImpl)) {
+            algorithm = new ParallelMergeSort();
+        } else if (SEQUENTIAL_QS.equals(mergeSortImpl)) {
+            algorithm = new SequentialQuickSort();
+        } else {
+            algorithm = new SequentialMergeSort();
+        }
+        return algorithm;
     }
 }

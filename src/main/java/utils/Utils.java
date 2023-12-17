@@ -5,6 +5,9 @@ import java.util.List;
 
 public class Utils {
     public static void merge(List<Integer> list, int start, int mid, int end) {
+        if (start > mid || mid+1 > end) {
+            return;
+        }
         List<Integer> tempList = new ArrayList<>();
         for (int i = mid+1; i <= end; i++) {
             tempList.add(list.get(i));

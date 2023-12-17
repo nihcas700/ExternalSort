@@ -26,7 +26,7 @@ public class TestExternalSort {
             }
         }
         long start = System.currentTimeMillis();
-        ExternalSort externalSort = new ExternalSort(INPUT_CHUNK_SIZE, OUTPUT_BUFFER_SIZE, SEQUENTIAL_QS);
+        ExternalSort externalSort = new ExternalSort(INPUT_CHUNK_SIZE, OUTPUT_BUFFER_SIZE, OUTPUT_CHUNK_SIZE, SEQUENTIAL_QS);
         externalSort.sort(INTERMEDIATE_PATH_STR, INPUT_FILE_PATH_STR, OUTPUT_FILE_PATH_STR);
         long end = System.currentTimeMillis();
         System.out.println("The test took " + (end - start) + " millis" + "\n");
@@ -54,6 +54,7 @@ public class TestExternalSort {
         for (long i = 0; i < size; i++) {
             writer.write(random.nextInt(1000000) + "\n");
         }
+        writer.close();
         long end = System.currentTimeMillis();
         System.out.println("Input creation took " + (end - start) + " millis" + "\n");
     }

@@ -11,6 +11,7 @@ public class Constants {
 
     // -----------Configuration Start
     public static final int INPUT_CHUNK_SIZE = 1000000;
+    public static final int OUTPUT_CHUNK_SIZE = 1000000;
     public static final int OUTPUT_BUFFER_SIZE = 100000;
     public static final String PARALLEL_MS = "PARALLEL_MERGE_SORT";
     public static final String SEQUENTIAL_MS = "SEQUENTIAL_MERGE_SORT";
