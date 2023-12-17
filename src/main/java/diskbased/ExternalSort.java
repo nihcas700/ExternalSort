@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 import static utils.Constants.PARALLEL_MS;
 import static utils.Constants.SEQUENTIAL_QS;
-import static utils.IntermediateFilesHelper.*;
+import static utils.FileUtility.*;
 
 public class ExternalSort {
     private int inputChunkSize;
@@ -78,7 +78,24 @@ public class ExternalSort {
             int totalLines = threadMetadata.values().stream()
                     .mapToInt(ThreadMetadata::getLinesProcessed)
                     .sum();
-            System.out.println("Execution of layer " + layer + " done. Processed " + totalLines + "lines");
+            long totalCPU = threadMetadata.values().stream()
+                    .mapToLong(ThreadMetadata::getCpuTime)
+                    .sum();
+            long totalIO = threadMetadata.values().stream()
+                    .mapToLong(ThreadMetadata::getIoTime)
+                    .sum();
+            long totalReadIO = threadMetadata.values().stream()
+                    .mapToLong(ThreadMetadata::getIoReadTime)
+                    .sum();
+            long totalWriteIO = threadMetadata.values().stream()
+                    .mapToLong(ThreadMetadata::getIoWriteTime)
+                    .sum();
+            System.out.println("Execution of layer " + layer + " done. " +
+                    "Total Lines=" + totalLines + ". " +
+                    "Total CPU=" + totalCPU + ". " +
+                    "Total IO=" + totalIO + ". " +
+                    "Total IORead=" + totalReadIO + ". " +
+                    "Total IOWrite=" + totalWriteIO);
             return null;
         }).join();
     }

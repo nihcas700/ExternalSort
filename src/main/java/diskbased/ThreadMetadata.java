@@ -19,8 +19,6 @@ public class ThreadMetadata {
         this.fileName = fileName;
     }
 
-    private String fileName;
-
     public int getLinesProcessed() {
         return linesProcessed;
     }
@@ -29,8 +27,6 @@ public class ThreadMetadata {
         this.linesProcessed = linesProcessed;
     }
 
-    private int linesProcessed;
-    private CompletableFuture<?> future;
     public long getRunTime() {
         return runTime;
     }
@@ -39,5 +35,44 @@ public class ThreadMetadata {
         this.runTime = runTime;
     }
 
+    public long getIoTime() {
+        return ioTime;
+    }
+
+    public void setIoTime(long ioTime) {
+        this.ioTime = ioTime;
+    }
+
+    public long getIoReadTime() {
+        return ioReadTime;
+    }
+
+    public void setIoReadTime(long ioReadTime) {
+        this.ioReadTime = ioReadTime;
+    }
+
+    public long getCpuTime() {
+        return cpuTime;
+    }
+
+    public void setCpuTime(long cpuTime) {
+        this.cpuTime = cpuTime;
+    }
+
+    public long getIoWriteTime() {
+        return ioWriteTime;
+    }
+
+    public void setIoWriteTime(long ioWriteTime) {
+        this.ioWriteTime = ioWriteTime;
+    }
+
+    private long ioWriteTime;
+    private long ioReadTime;
+    private long ioTime;
+    private long cpuTime;
     private long runTime;
+    private int linesProcessed;
+    private CompletableFuture<?> future;
+    private String fileName;
 }

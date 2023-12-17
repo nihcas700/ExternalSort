@@ -24,9 +24,13 @@ public class SortAndFlush implements Runnable {
 
     @Override
     public void run() {
+        // Sort the list
         long start = System.currentTimeMillis();
-        int linesProcessed = 0;
         sortImpl.sort(list);
+        long firstEnd = System.currentTimeMillis();
+
+        // Write to disk
+        int linesProcessed = 0;
         for (Integer num : list) {
             try {
                 writer.write(num + "\n");
@@ -41,8 +45,14 @@ public class SortAndFlush implements Runnable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        long end = System.currentTimeMillis();
-        metadata.setRunTime(end-start);
+        long secondEnd = System.currentTimeMillis();
+
+        // Set metadata
+        metadata.setRunTime(secondEnd-start);
+        metadata.setCpuTime(firstEnd-start);
+        metadata.setIoTime(secondEnd-firstEnd);
+        metadata.setIoReadTime(0);
+        metadata.setIoWriteTime(metadata.getIoTime() - metadata.getIoReadTime());
         metadata.setLinesProcessed(linesProcessed);
     }
 }

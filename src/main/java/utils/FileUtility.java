@@ -2,13 +2,12 @@ package utils;
 
 import java.io.File;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.function.Function.identity;
 
-public class IntermediateFilesHelper {
+public class FileUtility {
     private static final String FILE_PREFIX = "file";
     private static final String DELIMITER = "-";
 
@@ -44,4 +43,3 @@ public class IntermediateFilesHelper {
                 .collect(Collectors.toMap(File::getName, identity()));
     }
 }
-
