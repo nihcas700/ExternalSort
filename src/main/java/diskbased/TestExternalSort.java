@@ -3,6 +3,7 @@ package diskbased;
 import utils.Constants;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -47,6 +48,10 @@ public class TestExternalSort {
     }
 
     private static void createInput() throws IOException {
+        File file = new File(INTERMEDIATE_PATH_STR);
+        file.mkdir();
+        file = new File(Constants.INPUT_FILE_PATH_STR);
+        file.createNewFile();
         BufferedWriter writer = new BufferedWriter(new FileWriter(Constants.INPUT_FILE_PATH_STR), 1000000);
         long size = 1000000000L;
         Random random = new Random();
