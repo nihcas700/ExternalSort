@@ -1,25 +1,13 @@
 List Size:100000000
 Running Sequential Merge Sort
 Test Passed
-<<<<<<< Updated upstream
-The test took 76743 millis
+The test took 100188 millis
 =================================
 Running Sequential Quick Sort
 Test Passed
-The test took 29536 millis
+The test took 24265 millis
 =================================
 Running Parallel Merge Sort
 Test Passed
-The test took 52699 millis
-=======
-The test took 86039 millis
-=================================
-Running Sequential Quick Sort
-Test Passed
-The test took 21581 millis
-=================================
-Running Parallel Merge Sort
-Test Passed
-The test took 28945 millis
->>>>>>> Stashed changes
+The test took 46251 millis
 =================================

@@ -44,7 +44,7 @@ public class ExternalSort {
             List<File> filesX = new ArrayList<>(getLayerXFiles(intermediateFilePath, layer).values());
             System.out.println("Found " + filesX.size() + " files in layer " + layer);
             if (filesX.size() == 1) {
-                Files.copy(Path.of(filesX.get(0).getPath()), Path.of(finalOutputPath), StandardCopyOption.REPLACE_EXISTING);
+                filesX.get(0).renameTo(new File(finalOutputPath));
                 break;
             }
             int fileNo = 1;
