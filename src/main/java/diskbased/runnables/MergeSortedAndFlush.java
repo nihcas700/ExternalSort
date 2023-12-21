@@ -30,7 +30,7 @@ public class MergeSortedAndFlush implements Runnable {
     public void run() {
         long start = System.currentTimeMillis();
         int totalLines = 0;
-        long cputime = 0, ioReadTime;
+        long cputime = 0;
         while (true) {
             try {
                 // Read the files

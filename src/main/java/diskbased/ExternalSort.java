@@ -8,10 +8,7 @@ import inmemory.SequentialQuickSort;
 import inmemory.SortingAlgorithm;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -25,18 +22,20 @@ public class ExternalSort {
     private int outputBufferSize;
     private int outputChunkSize;
     private String mergeSortImpl;
+
     public ExternalSort(int inputChunkSize, int outputBufferSize, int outputChunkSize, String mergeSortImpl) {
         this.inputChunkSize = inputChunkSize;
         this.outputBufferSize = outputBufferSize;
         this.outputChunkSize = outputChunkSize;
         this.mergeSortImpl = mergeSortImpl;
     }
+
     public void sort(final String intermediateFilePath, String inputFilePath, String outputPath) throws Exception {
-        divideAndSort(intermediateFilePath, inputFilePath);
-        mergeAndSort(intermediateFilePath, outputPath);
+        divideAndScatter(intermediateFilePath, inputFilePath);
+        gatherAndMerge(intermediateFilePath, outputPath);
     }
 
-    private void mergeAndSort(final String intermediateFilePath, final String finalOutputPath) throws Exception {
+    private void gatherAndMerge(final String intermediateFilePath, final String finalOutputPath) throws Exception {
         long start = System.currentTimeMillis();
         int layer = 0;
         while (doLayerXFilesExist(intermediateFilePath, layer)) {
@@ -120,7 +119,7 @@ public class ExternalSort {
         return null;
     }
 
-    private void divideAndSort(String intermediateFilePath, String inputFilePath) throws IOException {
+    private void divideAndScatter(String intermediateFilePath, String inputFilePath) throws IOException {
         long start = System.currentTimeMillis();
         BufferedReader reader = new BufferedReader(new FileReader(inputFilePath));
         String line;
