@@ -17,6 +17,7 @@ out/
 !**/src/test/**/out/
 src/test/java/diskbased/input.txt
 src/test/java/diskbased/output.txt
+src/main/java/diskbased/asyncio/sample.txt
 src/test/java/diskbased/intermediate
 
 ### Eclipse ###

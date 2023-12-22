@@ -23,8 +23,8 @@ As can be seen, `Parallel Merge Sort` takes around half the time of `Sequential 
 
 [This package](https://github.com/nihcas700/ExternalSort/tree/master/src/main/java/diskbased) contains the following implementations
 
-1. External Sort with 2-way merge and blocking IO
-2. External Sort with 2-way merge and async IO
+1. External Sort with blocking IO
+2. External Sort with async IO
 
 The algorithms are run on an input file containing 10^9 integers, and their runtimes are as follows :-
 

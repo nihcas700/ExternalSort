@@ -1,4 +1,6 @@
 import diskbased.ExternalSort;
+import diskbased.asyncio.ExternalSortAsyncIO;
+import diskbased.blockingio.ExternalSortBlockingIO;
 import utils.Constants;
 
 import java.io.BufferedWriter;
@@ -23,12 +25,21 @@ public class Main {
             if (argList.contains("clearIntermediate")) {
                 clearIntermediate();
             }
+            ExternalSort externalSort = null;
+            if (argList.contains("runBlockingIO")) {
+                externalSort = new ExternalSortBlockingIO(INPUT_CHUNK_SIZE, OUTPUT_BUFFER_SIZE, OUTPUT_CHUNK_SIZE, SEQUENTIAL_QS);
+            } else if (argList.contains("runAsyncIO")) {
+                externalSort = new ExternalSortAsyncIO(INPUT_CHUNK_SIZE, OUTPUT_BUFFER_SIZE, OUTPUT_CHUNK_SIZE, SEQUENTIAL_QS);
+            } else {
+                System.out.println("Unknown External Sort Implementation. Test Failed!!!");
+                System.exit(1);
+            }
+            long start = System.currentTimeMillis();
+            externalSort.sort(INTERMEDIATE_PATH_STR, INPUT_FILE_PATH_STR, OUTPUT_FILE_PATH_STR);
+            long end = System.currentTimeMillis();
+            System.out.println("The test took " + (end - start) + " millis" + "\n");
+
         }
-        long start = System.currentTimeMillis();
-        ExternalSort externalSort = new ExternalSort(INPUT_CHUNK_SIZE, OUTPUT_BUFFER_SIZE, OUTPUT_CHUNK_SIZE, SEQUENTIAL_QS);
-        externalSort.sort(INTERMEDIATE_PATH_STR, INPUT_FILE_PATH_STR, OUTPUT_FILE_PATH_STR);
-        long end = System.currentTimeMillis();
-        System.out.println("The test took " + (end - start) + " millis" + "\n");
     }
 
     private static void clearIntermediate() throws IOException {
