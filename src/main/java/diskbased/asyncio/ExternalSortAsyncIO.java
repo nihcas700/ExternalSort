@@ -125,24 +125,28 @@ public class ExternalSortAsyncIO implements ExternalSort  {
         return null;
     }
 
-    private void divideAndScatter(String intermediateFilePath, String inputFilePath) throws IOException, InterruptedException {
+    private void divideAndScatter(String intermediateFilePath, String inputFilePath) throws IOException {
         long start = System.currentTimeMillis();
-        FileIOPubSub pubSub = new FileIOPubSub(10*inputChunkSize, 50*inputChunkSize, inputFilePath);
-        int fileNo = 1;
+        BufferedReader reader = new BufferedReader(new FileReader(inputFilePath), inputChunkSize);
+        String line;
+        int counter = 1, fileNo = 1;
+        List<Integer> list = new ArrayList<>();
         Map<String, ThreadMetadata> threadMetadata = new LinkedHashMap<>();
-        while (true) {
-            List<Integer> list = pubSub.readInts(inputChunkSize);
-            if (list.isEmpty()) break;
-            String fileName = getIntermediateFileName(fileNo, 0);
-            BufferedWriter writer = new BufferedWriter(new FileWriter(Paths.get(intermediateFilePath, fileName).toString()), outputBufferSize);
+        while ((line= reader.readLine()) != null) {
+            if (counter % inputChunkSize == 0) {
+                String fileName = getIntermediateFileName(fileNo, 0);
+                BufferedWriter writer = new BufferedWriter(new FileWriter(Paths.get(intermediateFilePath, fileName).toString()), outputBufferSize);
 
-            // Populate thread metadata
-            ThreadMetadata metadata = new ThreadMetadata();
-            metadata.setFileName(fileName);
-            threadMetadata.put(fileName, metadata);
-            metadata.setFuture(getSortAndFlushFuture(writer, list, metadata));
-            list.clear();
-            fileNo++;
+                // Populate thread metadata
+                ThreadMetadata metadata = new ThreadMetadata();
+                metadata.setFileName(fileName);
+                threadMetadata.put(fileName, metadata);
+                metadata.setFuture(getSortAndFlushFuture(writer, list, metadata));
+                list.clear();
+                fileNo++;
+            }
+            list.add(Integer.parseInt(line));
+            counter++;
         }
         waitForThreadsToComplete(threadMetadata, 0);
         long end = System.currentTimeMillis();

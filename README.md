@@ -30,8 +30,8 @@ The algorithms are run on an input file containing 10^9 integers, and their runt
 
 ```
 
-| Number of integers | 2-way merge and blocking IO | 2-way merge and async IO   |
-| ------------------ | --------------------------- | -------------------------- |
-| 10^9               | To be updated               | To be updated              |
+| Number of integers | External Sort with blocking IO | External Sort with async IO   |
+| ------------------ | ------------------------------ | ----------------------------- |
+| 10^9               | 1225.730 seconds (20.42 mins)  | 1160.744 seconds (19.34 mins) |
 
 ```

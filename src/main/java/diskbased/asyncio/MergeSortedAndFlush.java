@@ -11,17 +11,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MergeSortedAndFlush implements Runnable {
-    private BufferedReader firstReader;
-    private BufferedReader secondReader;
+    private FileIOPubSub firstPubSub;
+    private FileIOPubSub secondPubSub;
     private BufferedWriter writer;
     private int bufferSize;
     private ThreadMetadata metadata;
 
-    public MergeSortedAndFlush(BufferedReader firstReader, BufferedReader secondReader,
+    public MergeSortedAndFlush(String firstFile, String secondFile,
                                BufferedWriter writer, int bufferSize,
-                               ThreadMetadata metadata) {
-        this.firstReader = firstReader;
-        this.secondReader = secondReader;
+                               ThreadMetadata metadata) throws IOException {
+        this.firstPubSub = new FileIOPubSub(bufferSize, 5*bufferSize, firstFile);
+        this.secondPubSub = new FileIOPubSub(bufferSize, 5*bufferSize, secondFile);
         this.writer = writer;
         this.bufferSize = bufferSize;
         this.metadata = metadata;
@@ -35,12 +35,12 @@ public class MergeSortedAndFlush implements Runnable {
         while (true) {
             try {
                 // Read the files
-                if ((!isReaderReady(firstReader) && !isReaderReady(secondReader))) break;
                 List<Integer> list = new ArrayList<>();
-                list.addAll(readFile(firstReader, bufferSize, metadata));
+                list.addAll(readFile(firstPubSub, bufferSize, metadata));
                 int first = 0, mid = list.size() - 1;
-                list.addAll(readFile(secondReader, bufferSize, metadata));
+                list.addAll(readFile(secondPubSub, bufferSize, metadata));
                 int last = list.size() - 1;
+                if (list.isEmpty()) break;
 
                 // Merge the sorted lists
                 long cpuStart = System.currentTimeMillis();
@@ -53,13 +53,11 @@ public class MergeSortedAndFlush implements Runnable {
                     totalLines++;
                     writer.write(num + "\n");
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
         try {
-            closeCloseable(firstReader);
-            closeCloseable(secondReader);
             closeCloseable(writer);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -78,20 +76,9 @@ public class MergeSortedAndFlush implements Runnable {
         }
     }
 
-    private boolean isReaderReady(BufferedReader reader) throws IOException {
-        return reader != null && reader.ready();
-    }
-
-    private List<Integer> readFile(BufferedReader reader, int bufferSize, ThreadMetadata metadata) throws IOException {
+    private List<Integer> readFile(FileIOPubSub fileIOPubSub, int bufferSize, ThreadMetadata metadata) throws IOException, InterruptedException {
         long start = System.currentTimeMillis();
-        List<Integer> list = new ArrayList<>();
-        if (!isReaderReady(reader)) return list;
-        int counter = 0;
-        String line;
-        while (counter < bufferSize && (line = reader.readLine()) != null) {
-            list.add(Integer.valueOf(line));
-            counter++;
-        }
+        List<Integer> list = fileIOPubSub.readInts(bufferSize);
         long end = System.currentTimeMillis();
         metadata.setIoReadTime((end-start) + metadata.getIoReadTime());
         return list;
