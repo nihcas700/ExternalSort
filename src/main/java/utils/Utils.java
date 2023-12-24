@@ -35,4 +35,29 @@ public class Utils {
         }
     }
 
+    public static List<Integer> merge(List<Integer> firstList,
+                             List<Integer> secondList) {
+        List<Integer> sortedList = new ArrayList<>(firstList.size() + secondList.size());
+        int firstIndex = firstList.size() - 1, secondIndex = secondList.size() - 1;
+        while (firstIndex >= 0 && secondIndex >= 0) {
+            if (firstList.get(firstIndex) >= secondList.get(secondIndex)) {
+                sortedList.add(firstList.get(firstIndex));
+                firstList.remove(firstIndex);
+                firstIndex--;
+            } else {
+                sortedList.add(secondList.get(secondIndex));
+                secondList.remove(secondIndex);
+                secondIndex--;
+            }
+        }
+        while (firstIndex >= 0) {
+            sortedList.add(firstList.get(firstIndex));
+            firstIndex--;
+        }
+        while (secondIndex >= 0) {
+            sortedList.add(secondList.get(secondIndex));
+            secondIndex--;
+        }
+        return sortedList;
+    }
 }

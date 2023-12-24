@@ -35,23 +35,20 @@ public class MergeSortedAndFlush implements Runnable {
         while (true) {
             try {
                 // Read the files
-                List<Integer> list = new ArrayList<>();
-                list.addAll(readFile(firstPubSub, bufferSize, metadata));
-                int first = 0, mid = list.size() - 1;
-                list.addAll(readFile(secondPubSub, bufferSize, metadata));
-                int last = list.size() - 1;
-                if (list.isEmpty()) break;
+                List<Integer> firstList = new ArrayList<>(readFile(firstPubSub, bufferSize, metadata));
+                List<Integer> secondList = new ArrayList<>(readFile(secondPubSub, bufferSize, metadata));
+                if (firstList.isEmpty() && secondList.isEmpty()) break;
 
                 // Merge the sorted lists
                 long cpuStart = System.currentTimeMillis();
-                Utils.merge(list, first, mid, last);
+                List<Integer> mergedList = Utils.merge(firstList, secondList);
                 long cpuEnd = System.currentTimeMillis();
                 cputime += (cpuEnd - cpuStart);
 
                 // Flush it out to disk
-                for (Integer num : list) {
+                for (int i = mergedList.size()-1; i >= 0; i--) {
                     totalLines++;
-                    writer.write(num + "\n");
+                    writer.write(mergedList.get(i) + "\n");
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
