@@ -4,21 +4,25 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class FileIOPubSub {
-    private BlockingQueue<Integer> queue;
+    final LinkedList<Integer> queue;
+    final ReentrantLock queueLock = new ReentrantLock();
+    final Condition produceMode = queueLock.newCondition();
+    final Condition consumeMode = queueLock.newCondition();
     private boolean isActive = true;
 
     public FileIOPubSub(int queueSize, int bufferSize, String file) throws IOException {
-        this.queue = new ArrayBlockingQueue<>(queueSize);
-        new Thread(new AsyncFileReader(queue, file, bufferSize)).start();
+        this.queue = new LinkedList<>();
+        new Thread(new AsyncFileReader(file, bufferSize)).start();
     }
 
     // Method to test async IO consumer code separately
@@ -35,8 +39,12 @@ public class FileIOPubSub {
 
         // Async IO
         long start = System.currentTimeMillis();
-        FileIOPubSub pubSub = new FileIOPubSub(5 * maxNumber, maxNumber, "./src/main/java/diskbased/asyncio/sample.txt");
-        List<Integer> ints = pubSub.readInts(maxNumber);
+        FileIOPubSub pubSub = new FileIOPubSub(maxNumber + 5, maxNumber/200, "./src/main/java/diskbased/asyncio/sample.txt");
+        Iterator<Integer> pubSubIter = pubSub.iterator();
+        List<Integer> ints = new ArrayList<>();
+        while (pubSubIter.hasNext()) {
+            ints.add(pubSubIter.next());
+        }
         validateInts(maxNumber, ints);
         long end = System.currentTimeMillis();
         System.out.println("Passed. Took " + (end - start) + " millis");
@@ -55,6 +63,18 @@ public class FileIOPubSub {
         System.exit(0);
     }
 
+    public List<Integer> readInts(int size) throws InterruptedException {
+        int count = 0;
+        List<Integer> list = new ArrayList<>();
+        while (count < size) {
+            int num = queue.get(0);
+            if (num == -1) break;
+            list.add(num);
+            count++;
+        }
+        return list;
+    }
+
     private static void validateInts(int maxNumber, List<Integer> ints) {
         if (ints.size() != maxNumber) {
             System.out.println("Failed. Size=" + ints.get(ints.size() - 1));
@@ -68,33 +88,59 @@ public class FileIOPubSub {
         }
     }
 
-    public List<Integer> readInts(int size) throws InterruptedException {
-        int count = 0;
-        List<Integer> list = new ArrayList<>();
-        if (!isActive) {
-            return list;
-        }
-        while (count < size) {
-            int num = queue.take();
-            if (num == -1) {
-                isActive = false;
-                break;
+    public Iterator<Integer> iterator() {
+        return new Iterator<>() {
+            private int nextNo = -2;
+
+            @Override
+            public boolean hasNext() {
+                if (nextNo < -1) {
+                    fillNext();
+                }
+                return isActive;
             }
-            list.add(num);
-            count++;
-        }
-        return list;
+
+            private void fillNext() {
+                queueLock.lock();
+                while (queue.isEmpty()) {
+                    try {
+                        consumeMode.await();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
+                    }
+                }
+                nextNo = queue.poll();
+                produceMode.signal();
+                queueLock.unlock();
+                if (nextNo == -1) {
+                    isActive = false;
+                }
+            }
+
+            @Override
+            public Integer next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                int tmp = nextNo;
+                fillNext();
+                return tmp;
+            }
+        };
     }
 
-    public static class AsyncFileReader implements Runnable {
-        private final BlockingQueue<Integer> queue;
+    public class AsyncFileReader implements Runnable {
         private AsynchronousFileChannel channel;
         private ByteBuffer buffer;
         private int currNo = 0;
         private long pos = 0;
+        private AtomicInteger iterationCount = new AtomicInteger(0);
+        private AtomicLong cpuTime = new AtomicLong(0);
+        private AtomicLong cpu2Time = new AtomicLong(0);
+        private AtomicLong ioTime = new AtomicLong(0);
 
-        public AsyncFileReader(final BlockingQueue<Integer> queue, String file, int bufferSize) throws IOException {
-            this.queue = queue;
+        public AsyncFileReader(String file, int bufferSize) throws IOException {
             this.channel = AsynchronousFileChannel.open(Path.of(file));
             this.buffer = ByteBuffer.allocate(bufferSize);
         }
@@ -104,6 +150,11 @@ public class FileIOPubSub {
             try {
                 AtomicBoolean readMore = new AtomicBoolean(true);
                 while (readMore.get()) {
+                    queueLock.lock();
+                    while (!queue.isEmpty()) {
+                        produceMode.await();
+                    }
+                    iterationCount.getAndAdd(1);
                     CompletableFuture.supplyAsync(() -> readBytes(pos)).exceptionally(ex -> {
                         ex.printStackTrace();
                         readMore.set(false);
@@ -112,7 +163,7 @@ public class FileIOPubSub {
                         try {
                             if (numBytes > 0) {
                                 buffer.flip();
-                                this.currNo = convertToInt(buffer, this.currNo, queue);
+                                this.currNo = convertToInt(buffer, this.currNo);
                                 this.pos += numBytes;
                                 buffer.clear();
                                 return numBytes;
@@ -126,8 +177,18 @@ public class FileIOPubSub {
                             return -1;
                         }
                     }).join();
+                    consumeMode.signal();
+                    queueLock.unlock();
                 }
-                queue.put(-1);
+
+                System.out.println("Total Iterations:" + iterationCount.get());
+                System.out.println("Total cpu time:" + cpuTime.get());
+                System.out.println("Total cpu time:" + cpu2Time.get());
+                System.out.println("Total io time:" + ioTime.get());
+                queueLock.lock();
+                queue.add(-1);
+                consumeMode.signal();
+                queueLock.unlock();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             } finally {
@@ -143,6 +204,7 @@ public class FileIOPubSub {
         }
 
         private Integer readBytes(long pos) {
+            long start = System.currentTimeMillis();
             try {
                 return channel.read(buffer, pos).get();
             } catch (InterruptedException e) {
@@ -150,20 +212,25 @@ public class FileIOPubSub {
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
+            ioTime.getAndAdd(System.currentTimeMillis() - start);
             return -1;
         }
 
-        private int convertToInt(ByteBuffer data, int initial, final BlockingQueue<Integer> queue) throws InterruptedException {
+        private int convertToInt(ByteBuffer data, int initial) {
+            long start = System.currentTimeMillis();
             int currNo = initial;
             while (data.hasRemaining()) {
                 char ch = (char) (data.get() & 0xFF);
                 if (ch == '\n') {
-                    queue.put(currNo);
+                    long startt = System.currentTimeMillis();
+                    queue.add(currNo);
                     currNo = 0;
+                    cpu2Time.getAndAdd(System.currentTimeMillis() - startt);
                 } else {
                     currNo = (currNo * 10) + (ch - '0');
                 }
             }
+            cpuTime.getAndAdd(System.currentTimeMillis() - start);
             return currNo;
         }
     }

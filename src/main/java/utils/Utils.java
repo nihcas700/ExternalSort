@@ -1,7 +1,9 @@
 package utils;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.TreeSet;
 
 public class Utils {
     public static void merge(List<Integer> list, int start, int mid, int end) {
@@ -59,5 +61,31 @@ public class Utils {
             secondIndex--;
         }
         return sortedList;
+    }
+
+    public static TreeSet<Integer> merge(Iterator<Integer> firstIterator,
+                                         Iterator<Integer> secondIterator,
+                                         int threshold) {
+        TreeSet<Integer> sortedSet = new TreeSet<>();
+        while (firstIterator.hasNext() && secondIterator.hasNext()) {
+            sortedSet.add(firstIterator.next());
+            sortedSet.add(secondIterator.next());
+            if (sortedSet.size() >= threshold) {
+                return sortedSet;
+            }
+        }
+        while (firstIterator.hasNext()) {
+            sortedSet.add(firstIterator.next());
+            if (sortedSet.size() >= threshold) {
+                return sortedSet;
+            }
+        }
+        while (secondIterator.hasNext()) {
+            sortedSet.add(secondIterator.next());
+            if (sortedSet.size() >= threshold) {
+                return sortedSet;
+            }
+        }
+        return sortedSet;
     }
 }
