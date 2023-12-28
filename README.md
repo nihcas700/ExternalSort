@@ -54,9 +54,9 @@ We changed the implementation of `merge(list1, list2)` to `merge(List<Iterator<I
 copying the data to the intermediate lists, which would not only save some runtime, but also reduce the memory footprint. 
 Their updated runtimes for different values of `K` are as follows :-
 
-| Value of K | Runtimes                       |
-|------------|--------------------------------| 
-| K=2        | 929.743 seconds (15.49 mins)   |
-| K=10       | 420.322 seconds (7 minutes)    |
-| K=33       | 375.648 seconds (6.26 minutes) |
-| K=50       | 281.550 seconds (4.69 minutes) |
+| Value of K | Runtimes                         |
+|------------|----------------------------------|
+| K=2        | 929.743 seconds (15.49 mins)     |
+| K=10       | 420.322 seconds (7 minutes)      |
+| K=33       | 375.648 seconds (6.26 minutes)   |
+| K=50       | 281.550 seconds (4.69 minutes)   |
