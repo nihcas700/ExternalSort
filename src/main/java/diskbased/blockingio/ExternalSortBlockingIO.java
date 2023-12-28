@@ -31,12 +31,12 @@ public class ExternalSortBlockingIO implements ExternalSort {
     }
 
     @Override
-    public void sort(final String intermediateFilePath, String inputFilePath, String outputPath) throws Exception {
+    public void sort(final String intermediateFilePath, String inputFilePath, String outputPath, int K) throws Exception {
         divideAndScatter(intermediateFilePath, inputFilePath);
-        gatherAndMerge(intermediateFilePath, outputPath);
+        gatherAndMerge(intermediateFilePath, outputPath, K);
     }
 
-    private void gatherAndMerge(final String intermediateFilePath, final String finalOutputPath) throws Exception {
+    private void gatherAndMerge(final String intermediateFilePath, final String finalOutputPath, int K) throws Exception {
         long start = System.currentTimeMillis();
         int layer = 0;
         while (doLayerXFilesExist(intermediateFilePath, layer)) {
@@ -48,19 +48,21 @@ public class ExternalSortBlockingIO implements ExternalSort {
                 break;
             }
             int fileNo = 1;
-            for (int i = 0; i < filesX.size(); i+=2) {
-                BufferedReader firstReader = new BufferedReader(new FileReader(filesX.get(i)));
+            for (int i = 0; i < filesX.size(); i+=K) {
+                List<BufferedReader> readers = new ArrayList<>();
+                for (int j = 0; j < K; j++) {
+                    if ((i+j) >= filesX.size()) {
+                        break;
+                    }
+                    readers.add(new BufferedReader(new FileReader(filesX.get(i+j))));
+                }
                 String outputFileName = getIntermediateFileName(fileNo, layer+1);
                 BufferedWriter writer = new BufferedWriter(new FileWriter(Paths.get(intermediateFilePath,
                         outputFileName).toString()), outputBufferSize);
-                BufferedReader secondReader = null;
-                if (i+1 < filesX.size()) {
-                    secondReader = new BufferedReader(new FileReader(filesX.get(i+1)));
-                }
                 ThreadMetadata metadata = new ThreadMetadata();
                 metadata.setFileName(outputFileName);
                 threadMetadata.put(outputFileName, metadata);
-                metadata.setFuture(getMergeSortedFuture(firstReader, secondReader, writer, outputChunkSize, metadata));
+                metadata.setFuture(getMergeSortedFuture(readers, writer, outputChunkSize, metadata));
                 fileNo++;
             }
             waitForThreadsToComplete(threadMetadata, layer);
@@ -100,11 +102,11 @@ public class ExternalSortBlockingIO implements ExternalSort {
         }).join();
     }
 
-    private static CompletableFuture<Object> getMergeSortedFuture(BufferedReader firstReader, BufferedReader secondReader,
+    private static CompletableFuture<Object> getMergeSortedFuture(List<BufferedReader> readers,
                                                                   BufferedWriter writer, int bufferSize,
                                                                   ThreadMetadata metadata) {
         return CompletableFuture
-                .runAsync(new MergeSortedAndFlush(firstReader, secondReader, writer, bufferSize, metadata))
+                .runAsync(new MergeSortedAndFlushKway(readers, writer, bufferSize, metadata))
                 .exceptionally((ex) -> printException(metadata, ex))
                 .thenApply((result) -> printThreadMetadataDetails(metadata));
     }

@@ -1,8 +1,6 @@
 import diskbased.ExternalSort;
-import diskbased.asyncio.ExternalSortAsyncIO;
 import diskbased.blockingio.ExternalSortBlockingIO;
 import utils.Constants;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -12,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
-
 import static utils.Constants.*;
 
 public class Main {
@@ -28,14 +25,12 @@ public class Main {
             ExternalSort externalSort = null;
             if (argList.contains("runBlockingIO")) {
                 externalSort = new ExternalSortBlockingIO(INPUT_CHUNK_SIZE, OUTPUT_BUFFER_SIZE, OUTPUT_CHUNK_SIZE, SEQUENTIAL_QS);
-            } else if (argList.contains("runAsyncIO")) {
-                externalSort = new ExternalSortAsyncIO(INPUT_CHUNK_SIZE, OUTPUT_BUFFER_SIZE, OUTPUT_CHUNK_SIZE, SEQUENTIAL_QS);
             } else {
                 System.out.println("Unknown External Sort Implementation. Test Failed!!!");
                 System.exit(1);
             }
             long start = System.currentTimeMillis();
-            externalSort.sort(INTERMEDIATE_PATH_STR, INPUT_FILE_PATH_STR, OUTPUT_FILE_PATH_STR);
+            externalSort.sort(INTERMEDIATE_PATH_STR, INPUT_FILE_PATH_STR, OUTPUT_FILE_PATH_STR, 33);
             long end = System.currentTimeMillis();
             System.out.println("The test took " + (end - start) + " millis" + "\n");
 

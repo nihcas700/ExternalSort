@@ -1,5 +1,5 @@
 package diskbased;
 
 public interface ExternalSort {
-    void sort(final String intermediateFilePath, String inputFilePath, String outputPath) throws Exception;
+    void sort(final String intermediateFilePath, String inputFilePath, String outputPath, int K) throws Exception;
 }
