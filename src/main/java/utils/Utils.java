@@ -2,7 +2,6 @@ package utils;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.*;
@@ -64,22 +63,43 @@ public class Utils {
         return sortedList;
     }
 
-    public static List<Integer> merge(List<Iterator<Integer>> iterators, int threshold) {
-        List<Integer> sortedList = new ArrayList<>();
-        PriorityQueue<Pair<Integer, Iterator<Integer>>> pq = new PriorityQueue<>(Comparator.comparingInt(Pair::getLeft));
-        for (Iterator<Integer> iter : iterators) {
-            if (iter.hasNext()) {
-                pq.add(new ImmutablePair<>(iter.next(), iter));
+    public static Iterator<Integer> merge(List<Iterator<Integer>> iterators, int threshold) {
+        return new Iterator<>() {
+            int count = 0;
+            PriorityQueue<Pair<Integer, Iterator<Integer>>> pq = new PriorityQueue<>(Comparator.comparingInt(Pair::getLeft));
+            boolean isInitialized = false;
+
+            @Override
+            public boolean hasNext() {
+                if (!isInitialized) {
+                    initialize();
+                    isInitialized = true;
+                }
+                return !pq.isEmpty();
             }
-        }
-        while (!pq.isEmpty()) {
-            Pair<Integer, Iterator<Integer>> iterPair = pq.poll();
-            sortedList.add(iterPair.getLeft());
-            if (iterPair.getRight().hasNext() && sortedList.size() < threshold) {
-                pq.add(new ImmutablePair<>(iterPair.getRight().next(), iterPair.getRight()));
+
+            private void initialize() {
+                for (Iterator<Integer> iter : iterators) {
+                    if (iter.hasNext()) {
+                        pq.add(new ImmutablePair<>(iter.next(), iter));
+                    }
+                }
             }
-        }
-        return sortedList;
+
+            @Override
+            public Integer next() {
+                if (!hasNext()) {
+                    throw new RuntimeException("No more elements");
+                }
+                Pair<Integer, Iterator<Integer>> iterPair = pq.poll();
+                int toReturn = iterPair.getLeft();
+                count++;
+                if (iterPair.getRight().hasNext() && count < threshold) {
+                    pq.add(new ImmutablePair<>(iterPair.getRight().next(), iterPair.getRight()));
+                }
+                return toReturn;
+            }
+        };
     }
 
     public static Iterator<Integer> iteratorFromBuffReader(BufferedReader reader) {

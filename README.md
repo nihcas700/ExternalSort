@@ -9,13 +9,10 @@ This project contains the implementations of in-memory and diskbased sorting alg
 
 Both the algorithms are run on a list of 10^8 integers, and their runtimes are as follows :-
 
-```
-
 | Number of integers      | Sequential Merge Sort      | Parallel Merge Sort             |
 | ------------------      | -------------------------- | ------------------------------- |
 | 10^8                    | 100188 millis (100 seconds)| 46251 millis (46 seconds)       |
 
-```
 
 As can be seen, `Parallel Merge Sort` takes around half the time of `Sequential Merge Sort`.
 
@@ -59,4 +56,12 @@ Their updated runtimes for different values of `K` are as follows :-
 | K=2        | 929.743 seconds (15.49 mins)     |
 | K=10       | 420.322 seconds (7 minutes)      |
 | K=33       | 375.648 seconds (6.26 minutes)   |
-| K=50       | 281.550 seconds (4.69 minutes)   |
+
+# Optimization 3 - Removed the need for a buffer to store the output of merge.
+We changed the `merge(List<Iterator<Integer>> iterators)` method to return an iterator instead of a list, to save some runtime
+and the memory footprint.
+
+| K=33           | Runtimes                         |
+|----------------|----------------------------------|
+| Optimization 2 | 375.648 seconds (6.26 minutes)   |
+| Optimization 3 | 360.422 seconds (6.007 minutes)  |

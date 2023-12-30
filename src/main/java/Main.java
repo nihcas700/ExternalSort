@@ -30,7 +30,7 @@ public class Main {
                 System.exit(1);
             }
             long start = System.currentTimeMillis();
-            externalSort.sort(INTERMEDIATE_PATH_STR, INPUT_FILE_PATH_STR, OUTPUT_FILE_PATH_STR, 50);
+            externalSort.sort(INTERMEDIATE_PATH_STR, INPUT_FILE_PATH_STR, OUTPUT_FILE_PATH_STR, 33);
             long end = System.currentTimeMillis();
             System.out.println("The test took " + (end - start) + " millis" + "\n");
 
