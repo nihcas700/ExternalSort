@@ -6,6 +6,8 @@ import inmemory.ParallelMergeSort;
 import inmemory.SequentialMergeSort;
 import inmemory.SequentialQuickSort;
 import inmemory.SortingAlgorithm;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.Paths;
@@ -18,6 +20,8 @@ import static utils.Constants.SEQUENTIAL_QS;
 import static utils.FileUtility.*;
 
 public class ExternalSortBlockingIO implements ExternalSort {
+    private static final Logger LOGGER = LogManager.getLogger(ExternalSortBlockingIO.class);
+    private Logger log = LOGGER;
     private int inputChunkSize;
     private int outputBufferSize;
     private int outputChunkSize;
@@ -42,7 +46,7 @@ public class ExternalSortBlockingIO implements ExternalSort {
         while (doLayerXFilesExist(intermediateFilePath, layer)) {
             Map<String, ThreadMetadata> threadMetadata = new LinkedHashMap<>();
             List<File> filesX = new ArrayList<>(getLayerXFiles(intermediateFilePath, layer).values());
-            System.out.println("Found " + filesX.size() + " files in layer " + layer);
+            log.info("Found " + filesX.size() + " files in layer " + layer);
             if (filesX.size() == 1) {
                 filesX.get(0).renameTo(new File(finalOutputPath));
                 break;
@@ -69,10 +73,10 @@ public class ExternalSortBlockingIO implements ExternalSort {
             layer++;
         }
         long end = System.currentTimeMillis();
-        System.out.println("[mergeAndSort] Merge and sort took " + (end - start) + " millis");
+        log.info("[mergeAndSort] Merge and sort took " + (end - start) + " millis");
     }
 
-    private static void waitForThreadsToComplete(Map<String, ThreadMetadata> threadMetadata, final int layer) {
+    private void waitForThreadsToComplete(Map<String, ThreadMetadata> threadMetadata, final int layer) {
         CompletableFuture.allOf(threadMetadata.values().stream()
                 .map(ThreadMetadata::getFuture)
                 .collect(Collectors.toList())
@@ -92,7 +96,7 @@ public class ExternalSortBlockingIO implements ExternalSort {
             long totalWriteIO = threadMetadata.values().stream()
                     .mapToLong(ThreadMetadata::getIoWriteTime)
                     .sum();
-            System.out.println("Execution of layer " + layer + " done. " +
+            log.info("Execution of layer " + layer + " done. " +
                     "Total Lines=" + totalLines + ". " +
                     "Total CPU=" + totalCPU + ". " +
                     "Total IO=" + totalIO + ". " +
@@ -102,7 +106,7 @@ public class ExternalSortBlockingIO implements ExternalSort {
         }).join();
     }
 
-    private static CompletableFuture<Object> getMergeSortedFuture(List<BufferedReader> readers,
+    private CompletableFuture<Object> getMergeSortedFuture(List<BufferedReader> readers,
                                                                   BufferedWriter writer, int bufferSize,
                                                                   ThreadMetadata metadata) {
         return CompletableFuture
@@ -110,14 +114,14 @@ public class ExternalSortBlockingIO implements ExternalSort {
                 .exceptionally((ex) -> printException(metadata, ex))
                 .thenApply((result) -> printThreadMetadataDetails(metadata));
     }
-    private static Void printThreadMetadataDetails(ThreadMetadata metadata) {
-        System.out.println("Thread " + metadata.getFileName() + " took " +
+    private Void printThreadMetadataDetails(ThreadMetadata metadata) {
+        log.info("Thread " + metadata.getFileName() + " took " +
                 metadata.getRunTime() + " millis");
         return null;
     }
 
-    private static Void printException(ThreadMetadata metadata, Throwable ex) {
-        System.out.println("Exception Occurred in " + metadata.getFileName());
+    private Void printException(ThreadMetadata metadata, Throwable ex) {
+        log.info("Exception Occurred in " + metadata.getFileName());
         ex.printStackTrace();
         return null;
     }
@@ -147,7 +151,7 @@ public class ExternalSortBlockingIO implements ExternalSort {
         }
         waitForThreadsToComplete(threadMetadata, 0);
         long end = System.currentTimeMillis();
-        System.out.println("[divideAndSort] Divide and sort took " + (end - start) + " millis");
+        log.info("[divideAndSort] Divide and sort took " + (end - start) + " millis");
     }
 
     private CompletableFuture<Object> getSortAndFlushFuture(BufferedWriter writer, List<Integer> list, ThreadMetadata metadata) {

@@ -63,11 +63,11 @@ public class Utils {
         return sortedList;
     }
 
-    public static Iterator<Integer> merge(List<Iterator<Integer>> iterators, int threshold) {
+    public static Iterator<Integer> merge(final List<Iterator<Integer>> iterators, final int threshold) {
         return new Iterator<>() {
-            int count = 0;
-            PriorityQueue<Pair<Integer, Iterator<Integer>>> pq = new PriorityQueue<>(Comparator.comparingInt(Pair::getLeft));
-            boolean isInitialized = false;
+            private int count = 0;
+            private PriorityQueue<Pair<Integer, Iterator<Integer>>> pq = new PriorityQueue<>(Comparator.comparingInt(Pair::getLeft));
+            private boolean isInitialized = false;
 
             @Override
             public boolean hasNext() {
