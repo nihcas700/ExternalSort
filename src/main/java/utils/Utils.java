@@ -1,10 +1,22 @@
 package utils;
 
+import diskbased.ThreadMetadata;
+import inmemory.ParallelMergeSort;
+import inmemory.SequentialMergeSort;
+import inmemory.SequentialQuickSort;
+import inmemory.SortingAlgorithm;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.Logger;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import static utils.Constants.PARALLEL_MS;
+import static utils.Constants.SEQUENTIAL_QS;
 
 public class Utils {
     public static void merge(List<Integer> list, int start, int mid, int end) {
@@ -124,6 +136,48 @@ public class Utils {
                 }
             }
         };
+    }
+
+    public static Void printThreadMetadataDetails(ThreadMetadata metadata, Logger log) {
+        log.info("Thread " + metadata.getFileName() + " took " +
+                metadata.getRunTime() + " millis");
+        return null;
+    }
+
+    public static Void printException(ThreadMetadata metadata, Throwable ex, Logger log) {
+        log.info("Exception Occurred in " + metadata.getFileName());
+        ex.printStackTrace();
+        return null;
+    }
+
+    public static void waitForThreadsToComplete(Map<String, ThreadMetadata> threadMetadata, final int layer, Logger log) {
+        CompletableFuture.allOf(threadMetadata.values().stream()
+                .map(ThreadMetadata::getFuture)
+                .collect(Collectors.toList())
+                .toArray(new CompletableFuture<?>[0])).thenApply(res -> {
+            int totalLines = threadMetadata.values().stream()
+                    .mapToInt(ThreadMetadata::getLinesProcessed)
+                    .sum();
+            long totalRuntime = threadMetadata.values().stream()
+                    .mapToLong(ThreadMetadata::getRunTime)
+                    .sum();
+            log.info("Execution of layer " + layer + " done. " +
+                    "Total Lines=" + totalLines + ". " +
+                    "Total Runtime=" + totalRuntime);
+            return null;
+        }).join();
+    }
+
+    public static SortingAlgorithm getSortingAlgorithm(String mergeSortImpl) {
+        SortingAlgorithm algorithm;
+        if (PARALLEL_MS.equals(mergeSortImpl)) {
+            algorithm = new ParallelMergeSort();
+        } else if (SEQUENTIAL_QS.equals(mergeSortImpl)) {
+            algorithm = new SequentialQuickSort();
+        } else {
+            algorithm = new SequentialMergeSort();
+        }
+        return algorithm;
     }
 
     public static void main(String[] args) {
