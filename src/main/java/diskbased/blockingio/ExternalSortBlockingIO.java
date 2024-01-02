@@ -119,7 +119,7 @@ public class ExternalSortBlockingIO implements ExternalSort {
         BufferedReader reader = new BufferedReader(new FileReader(inputFilePath), inputChunkSize);
 
         int counter = 1, fileNo = 1;
-        List<Integer> list = new ArrayList<>();
+        List<Integer> list = new ArrayList<>(inputChunkSize);
         Map<String, ThreadMetadata> threadMetadata = new LinkedHashMap<>();
         while (true) {
             String line = reader.readLine();
@@ -132,7 +132,7 @@ public class ExternalSortBlockingIO implements ExternalSort {
                 metadata.setFileName(fileName);
                 threadMetadata.put(fileName, metadata);
                 metadata.setFuture(getSortAndFlushFuture(writer, list, metadata));
-                list.clear();
+                list = new ArrayList<>(inputChunkSize+1);
                 fileNo++;
                 if (line == null) break;
             }

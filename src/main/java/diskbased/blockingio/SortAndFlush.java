@@ -16,7 +16,7 @@ public class SortAndFlush extends MonitoredRunnable {
                         ThreadMetadata metadata) {
         super(metadata);
         this.writer = writer;
-        this.list = new ArrayList<>(list);
+        this.list = list;
         this.sortImpl = sortImpl;
     }
 

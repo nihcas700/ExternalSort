@@ -32,7 +32,7 @@ The algorithms are run on an input file containing 10^9 integers, and their runt
 The following sections document the optimizations that were made to both the implementations 
 and their performance implications along the way.
 
-# Optimization 1 (for K = 2) - Changed the way two sorted lists were merged.
+### Optimization 1 (for K = 2) - Changed the way two sorted lists were merged.
 Initially, the signature of the merge method looked like `merge(list, start, mid, end)`. It expected
 a single list containing two sorted sub-lists - first ranging from start to mid and the next sublist ranging from
 mid+1 to end. The implementation was copying the second sublist (mid+1 to end) over to a new list
@@ -45,7 +45,7 @@ method signature looks like `merge(list1, list2)`. Their updated runtimes are as
 | ------------------ |----------------------------------------|
 | 10^9               | 929.743 seconds (15.49 mins)           |
 
-# Optimization 2 - Changed the way sorted lists were merged, to pave way for K-way merge
+### Optimization 2 - Changed the way sorted lists were merged, to pave way for K-way merge
 We changed the implementation of `merge(list1, list2)` to `merge(List<Iterator<Integer>> iterators)` to avoid the step of 
 copying the data to the intermediate lists, which would not only save some runtime, but also reduce the memory footprint,
 which can be used else where. Their updated runtimes for different values of `K` are as follows :-
@@ -56,7 +56,7 @@ which can be used else where. Their updated runtimes for different values of `K`
 | K=10       | 420.322 seconds (7 minutes)      |
 | K=33       | 375.648 seconds (6.26 minutes)   |
 
-# Optimization 3 - Removed the need for a buffer to store the output of merge.
+### Optimization 3 - Removed the need of a buffer to store the output of merge.
 We changed the `merge(List<Iterator<Integer>> iterators)` method to return an iterator instead of a list, to save some runtime
 and the memory footprint.
 
@@ -67,14 +67,26 @@ and the memory footprint.
 
 At this point, no intermediate buffer is used for the K-way merge process.
 
-# Optimization 4 - Increased the buffer size of the BufferedReaders used in K-way merge 
+### Optimization 4 - Increased the buffer size of the BufferedReaders used in K-way merge 
 | Optimizations  | Runtimes                       |
 |----------------|--------------------------------|
 | Optimization 3 | 345.422 seconds (5.75 minutes) |
 | Optimization 4 | 311.465 seconds (5.19 minutes) |
 
-# Optimizations that did not work
+### Optimization 5 - Removed the redundant buffer copy in divide and scatter step.
+Similar to Optimization 3.
 
-# Compression of intermediate files' outputs
+| Optimizations  | Runtimes                       |
+|----------------|--------------------------------|
+| Optimization 4 | 311.465 seconds (5.19 minutes) |
+| Optimization 5 | 302.571 seconds (5.04 minutes) |
+
+### Optimizations that did not work
+
+###### Compression of intermediate files' outputs
 This approach performed as good as the corresponding optimizations. One probable reason why it didn't add any value was 
 because probably the I/O bandwidth was never the bottleneck.
+
+# Learnings
+1. Prefer iterators over the temporary buffers (if performance is the goal). Be careful, this would make code pretty 
+hard to read.
