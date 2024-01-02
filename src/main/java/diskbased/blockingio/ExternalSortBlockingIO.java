@@ -139,7 +139,7 @@ public class ExternalSortBlockingIO implements ExternalSort {
             list.add(Integer.parseInt(line));
             counter++;
         }
-        waitForThreadsToComplete(threadMetadata, 0);
+        waitForThreadsToComplete(threadMetadata, -1);
         long end = System.currentTimeMillis();
         log.info("[divideAndSort] Divide and sort took " + (end - start) + " millis");
     }
