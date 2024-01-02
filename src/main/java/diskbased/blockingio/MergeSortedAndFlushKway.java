@@ -11,28 +11,24 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class MergeSortedAndFlushKway implements Runnable {
+public class MergeSortedAndFlushKway extends MonitoredRunnable {
     private List<BufferedReader> readers;
     private BufferedWriter writer;
-    private int bufferSize;
-    private ThreadMetadata metadata;
 
-    public MergeSortedAndFlushKway(List<BufferedReader> readers, BufferedWriter writer, int bufferSize, ThreadMetadata metadata) {
+    public MergeSortedAndFlushKway(List<BufferedReader> readers, BufferedWriter writer,
+                                   ThreadMetadata metadata) {
+        super(metadata);
         this.readers = readers;
         this.writer = writer;
-        this.bufferSize = bufferSize;
-        this.metadata = metadata;
     }
 
     @Override
-    public void run() {
-        long start = System.currentTimeMillis();
-        int totalLines = 0;
+    public void doRun() {
         try {
             Iterator<Integer> mergedIterator = Utils.merge(getIterators(readers));
             // Flush it out to disk
             while (mergedIterator.hasNext()) {
-                totalLines++;
+                incrementLinesProcessed();
                 writer.write(mergedIterator.next() + "\n");
             }
             List<Closeable> closeables = new ArrayList<>(readers);
@@ -41,9 +37,6 @@ public class MergeSortedAndFlushKway implements Runnable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        long end = System.currentTimeMillis();
-        metadata.setRunTime(end - start);
-        metadata.setLinesProcessed(totalLines);
     }
 
     private void closeCloseables(List<Closeable> closeables) throws IOException {

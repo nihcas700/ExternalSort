@@ -47,3 +47,5 @@ bin/
 
 logs/
 id_rsa_personal*
+
+sample*.txt
