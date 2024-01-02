@@ -20,15 +20,14 @@ As can be seen, `Parallel Merge Sort` takes around half the time of `Sequential 
 
 [This package](https://github.com/nihcas700/ExternalSort/tree/master/src/main/java/diskbased) contains the following implementations
 
-1. External Sort with blocking IO - 2-way merge
-2. External Sort with blocking IO - K-way merge
-3. [Upcoming] External Sort with Async IO.
+1. External Sort with blocking IO - K-way merge (different values of K)
+2. [Upcoming] External Sort with Async IO.
 
 The algorithms are run on an input file containing 10^9 integers, and their runtimes are as follows :-
 
-|  Number of integers   | External Sort with blocking IO - 2-way merge |
-|-----------------------|----------------------------------------------|
-|  10^9                 | 1225.730 seconds (20.42 mins)                |
+|  Number of integers   | External Sort with blocking IO (K = 2) |
+|-----------------------|----------------------------------------|
+|  10^9                 | 1225.730 seconds (20.42 mins)          |
 
 The following sections document the optimizations that were made to both the implementations 
 and their performance implications along the way.
@@ -48,8 +47,8 @@ method signature looks like `merge(list1, list2)`. Their updated runtimes are as
 
 # Optimization 2 - Changed the way sorted lists were merged, to pave way for K-way merge
 We changed the implementation of `merge(list1, list2)` to `merge(List<Iterator<Integer>> iterators)` to avoid the step of 
-copying the data to the intermediate lists, which would not only save some runtime, but also reduce the memory footprint. 
-Their updated runtimes for different values of `K` are as follows :-
+copying the data to the intermediate lists, which would not only save some runtime, but also reduce the memory footprint,
+which can be used else where. Their updated runtimes for different values of `K` are as follows :-
 
 | Value of K | Runtimes                         |
 |------------|----------------------------------|
@@ -61,7 +60,15 @@ Their updated runtimes for different values of `K` are as follows :-
 We changed the `merge(List<Iterator<Integer>> iterators)` method to return an iterator instead of a list, to save some runtime
 and the memory footprint.
 
-| K=33           | Runtimes                         |
-|----------------|----------------------------------|
-| Optimization 2 | 375.648 seconds (6.26 minutes)   |
-| Optimization 3 | 360.422 seconds (6.007 minutes)  |
+| K=33           | Runtimes                       |
+|----------------|--------------------------------|
+| Optimization 2 | 375.648 seconds (6.26 minutes) |
+| Optimization 3 | 345.422 seconds (5.75 minutes) |
+
+At this point, no intermediate buffer is used for the K-way merge process.
+
+# Optimizations that did not work
+
+# Compression of intermediate files' outputs
+This approach performed as good as `Optimization 3`. One probable reason why it didn't add any value was because
+the disk bandwidth was never the bottleneck.

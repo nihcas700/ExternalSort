@@ -66,7 +66,7 @@ public class ExternalSortBlockingIO implements ExternalSort {
                 ThreadMetadata metadata = new ThreadMetadata();
                 metadata.setFileName(outputFileName);
                 threadMetadata.put(outputFileName, metadata);
-                metadata.setFuture(getMergeSortedFuture(readers, writer, outputChunkSize, metadata));
+                metadata.setFuture(getMergeSortedFuture(readers, writer, metadata));
                 fileNo++;
             }
             waitForThreadsToComplete(threadMetadata, layer);
@@ -84,33 +84,21 @@ public class ExternalSortBlockingIO implements ExternalSort {
             int totalLines = threadMetadata.values().stream()
                     .mapToInt(ThreadMetadata::getLinesProcessed)
                     .sum();
-            long totalCPU = threadMetadata.values().stream()
-                    .mapToLong(ThreadMetadata::getCpuTime)
-                    .sum();
-            long totalIO = threadMetadata.values().stream()
-                    .mapToLong(ThreadMetadata::getIoTime)
-                    .sum();
-            long totalReadIO = threadMetadata.values().stream()
-                    .mapToLong(ThreadMetadata::getIoReadTime)
-                    .sum();
-            long totalWriteIO = threadMetadata.values().stream()
-                    .mapToLong(ThreadMetadata::getIoWriteTime)
+            long totalRuntime = threadMetadata.values().stream()
+                    .mapToLong(ThreadMetadata::getRunTime)
                     .sum();
             log.info("Execution of layer " + layer + " done. " +
                     "Total Lines=" + totalLines + ". " +
-                    "Total CPU=" + totalCPU + ". " +
-                    "Total IO=" + totalIO + ". " +
-                    "Total IORead=" + totalReadIO + ". " +
-                    "Total IOWrite=" + totalWriteIO);
+                    "Total Runtime=" + totalRuntime);
             return null;
         }).join();
     }
 
     private CompletableFuture<Object> getMergeSortedFuture(List<BufferedReader> readers,
-                                                                  BufferedWriter writer, int bufferSize,
+                                                                  BufferedWriter writer,
                                                                   ThreadMetadata metadata) {
         return CompletableFuture
-                .runAsync(new MergeSortedAndFlushKway(readers, writer, bufferSize, metadata))
+                .runAsync(new MergeSortedAndFlushKway(readers, writer, metadata))
                 .exceptionally((ex) -> printException(metadata, ex))
                 .thenApply((result) -> printThreadMetadataDetails(metadata));
     }
