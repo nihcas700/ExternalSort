@@ -129,12 +129,13 @@ public class ExternalSortBlockingIO implements ExternalSort {
     private void divideAndScatter(String intermediateFilePath, String inputFilePath) throws IOException {
         long start = System.currentTimeMillis();
         BufferedReader reader = new BufferedReader(new FileReader(inputFilePath), inputChunkSize);
-        String line;
+
         int counter = 1, fileNo = 1;
         List<Integer> list = new ArrayList<>();
         Map<String, ThreadMetadata> threadMetadata = new LinkedHashMap<>();
-        while ((line= reader.readLine()) != null) {
-            if (counter % inputChunkSize == 0) {
+        while (true) {
+            String line = reader.readLine();
+            if (counter % inputChunkSize == 0 || line == null) {
                 String fileName = getIntermediateFileName(fileNo, 0);
                 BufferedWriter writer = new BufferedWriter(new FileWriter(Paths.get(intermediateFilePath, fileName).toString()), outputBufferSize);
 
@@ -145,6 +146,7 @@ public class ExternalSortBlockingIO implements ExternalSort {
                 metadata.setFuture(getSortAndFlushFuture(writer, list, metadata));
                 list.clear();
                 fileNo++;
+                if (line == null) break;
             }
             list.add(Integer.parseInt(line));
             counter++;

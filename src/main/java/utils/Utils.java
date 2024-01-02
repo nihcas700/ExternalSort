@@ -63,9 +63,8 @@ public class Utils {
         return sortedList;
     }
 
-    public static Iterator<Integer> merge(final List<Iterator<Integer>> iterators, final int threshold) {
+    public static Iterator<Integer> merge(final List<Iterator<Integer>> iterators) {
         return new Iterator<>() {
-            private int count = 0;
             private PriorityQueue<Pair<Integer, Iterator<Integer>>> pq = new PriorityQueue<>(Comparator.comparingInt(Pair::getLeft));
             private boolean isInitialized = false;
 
@@ -93,8 +92,7 @@ public class Utils {
                 }
                 Pair<Integer, Iterator<Integer>> iterPair = pq.poll();
                 int toReturn = iterPair.getLeft();
-                count++;
-                if (iterPair.getRight().hasNext() && count < threshold) {
+                if (iterPair.getRight().hasNext()) {
                     pq.add(new ImmutablePair<>(iterPair.getRight().next(), iterPair.getRight()));
                 }
                 return toReturn;
@@ -132,6 +130,6 @@ public class Utils {
         List<Integer> list1 = Arrays.asList(1, 3, 5, 6, 8, 10);
         List<Integer> list2 = Arrays.asList(2, 3, 4, 6);
         List<Integer> list3 = Arrays.asList(2, 7, 8, 9);
-        System.out.println(merge(Arrays.asList(list1.iterator(), list2.iterator(), list3.iterator()), 1000));
+        System.out.println(merge(Arrays.asList(list1.iterator(), list2.iterator(), list3.iterator())));
     }
 }

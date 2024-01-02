@@ -29,13 +29,11 @@ public class MergeSortedAndFlushKway implements Runnable {
         long start = System.currentTimeMillis();
         int totalLines = 0;
         try {
-            Iterator<Integer> mergedIterator;
-            while ((mergedIterator = Utils.merge(getIterators(readers), bufferSize)).hasNext()) {
-                // Flush it out to disk
-                while (mergedIterator.hasNext()) {
-                    totalLines++;
-                    writer.write(mergedIterator.next() + "\n");
-                }
+            Iterator<Integer> mergedIterator = Utils.merge(getIterators(readers));
+            // Flush it out to disk
+            while (mergedIterator.hasNext()) {
+                totalLines++;
+                writer.write(mergedIterator.next() + "\n");
             }
             List<Closeable> closeables = new ArrayList<>(readers);
             closeables.add(writer);
