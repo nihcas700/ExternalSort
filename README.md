@@ -60,15 +60,21 @@ which can be used else where. Their updated runtimes for different values of `K`
 We changed the `merge(List<Iterator<Integer>> iterators)` method to return an iterator instead of a list, to save some runtime
 and the memory footprint.
 
-| K=33           | Runtimes                       |
+| Optimizations  | Runtimes                       |
 |----------------|--------------------------------|
 | Optimization 2 | 375.648 seconds (6.26 minutes) |
 | Optimization 3 | 345.422 seconds (5.75 minutes) |
 
 At this point, no intermediate buffer is used for the K-way merge process.
 
+# Optimization 4 - Increased the buffer size of the BufferedReaders used in K-way merge 
+| Optimizations  | Runtimes                       |
+|----------------|--------------------------------|
+| Optimization 3 | 345.422 seconds (5.75 minutes) |
+| Optimization 4 | 311.465 seconds (5.19 minutes) |
+
 # Optimizations that did not work
 
 # Compression of intermediate files' outputs
-This approach performed as good as `Optimization 3`. One probable reason why it didn't add any value was because
-the disk bandwidth was never the bottleneck.
+This approach performed as good as the corresponding optimizations. One probable reason why it didn't add any value was 
+because probably the I/O bandwidth was never the bottleneck.

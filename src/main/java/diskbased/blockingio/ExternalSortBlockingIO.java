@@ -58,7 +58,7 @@ public class ExternalSortBlockingIO implements ExternalSort {
                     if ((i+j) >= filesX.size()) {
                         break;
                     }
-                    readers.add(new BufferedReader(new FileReader(filesX.get(i+j))));
+                    readers.add(new BufferedReader(new FileReader(filesX.get(i+j)), inputChunkSize));
                 }
                 String outputFileName = getIntermediateFileName(fileNo, layer+1);
                 BufferedWriter writer = new BufferedWriter(new FileWriter(Paths.get(intermediateFilePath,
