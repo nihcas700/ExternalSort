@@ -1,10 +1,7 @@
 package utils;
 
 import diskbased.ThreadMetadata;
-import inmemory.ParallelMergeSort;
-import inmemory.SequentialMergeSort;
-import inmemory.SequentialQuickSort;
-import inmemory.SortingAlgorithm;
+import inmemory.*;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
@@ -15,8 +12,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static utils.Constants.PARALLEL_MS;
-import static utils.Constants.SEQUENTIAL_QS;
+import static utils.Constants.*;
 
 public class Utils {
     public static void merge(List<Integer> list, int start, int mid, int end) {
@@ -168,12 +164,14 @@ public class Utils {
         }).join();
     }
 
-    public static SortingAlgorithm getSortingAlgorithm(String mergeSortImpl) {
+    public static SortingAlgorithm getSortingAlgorithm(String sortImpl) {
         SortingAlgorithm algorithm;
-        if (PARALLEL_MS.equals(mergeSortImpl)) {
+        if (PARALLEL_MS.equals(sortImpl)) {
             algorithm = new ParallelMergeSort();
-        } else if (SEQUENTIAL_QS.equals(mergeSortImpl)) {
+        } else if (SEQUENTIAL_QS.equals(sortImpl)) {
             algorithm = new SequentialQuickSort();
+        } else if (COLLECTIONS_PS.equals(sortImpl)){
+            algorithm = new CollectionsSort();
         } else {
             algorithm = new SequentialMergeSort();
         }

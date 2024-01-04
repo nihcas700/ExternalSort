@@ -62,6 +62,8 @@ public class GatherAndMergeJob {
     }
 
     public CompletableFuture<Object> getMergeSortedFuture(List<BufferedReader> readers, BufferedWriter writer, ThreadMetadata metadata) {
-        return CompletableFuture.runAsync(new MergeSortedAndFlushKway(readers, writer, metadata)).exceptionally((ex) -> Utils.printException(metadata, ex, log)).thenApply((result) -> Utils.printThreadMetadataDetails(metadata, log));
+        return CompletableFuture.runAsync(new MergeSortedAndFlushKway(readers, writer, metadata))
+                .exceptionally((ex) -> Utils.printException(metadata, ex, log))
+                .thenApply((result) -> Utils.printThreadMetadataDetails(metadata, log));
     }
 }

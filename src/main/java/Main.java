@@ -23,7 +23,7 @@ public class Main {
             }
             ExternalSort externalSort = null;
             if (argList.contains("runBlockingIO")) {
-                externalSort = new ExternalSortBlockingIO(INPUT_CHUNK_SIZE, OUTPUT_BUFFER_SIZE, SEQUENTIAL_QS);
+                externalSort = new ExternalSortBlockingIO(INPUT_CHUNK_SIZE, OUTPUT_BUFFER_SIZE, COLLECTIONS_PS);
             } else {
                 System.out.println("Unknown External Sort Implementation. Test Failed!!!");
                 System.exit(1);

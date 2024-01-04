@@ -69,8 +69,11 @@ Similar to Optimization 3.
 ### Optimizations that did not work
 
 ###### Compression of intermediate files' outputs
-This approach performed as good as the corresponding optimizations. One probable reason why it didn't add any value was 
-because probably the I/O bandwidth was never the bottleneck.
+1. This approach performed as good as the corresponding optimizations. One probable reason why it didn't add any value was 
+   because probably the I/O bandwidth was never the bottleneck.
+2. In-memory parallel sort performed 5 times better than the sequential counterpart on a list of 10^6 integers in isolation.
+   However, it performed poorly in this External sort setup due to so many parallel tasks fighting for the CPU and the associated
+   context switching involved with so many threads spawned up.
 
 # Learnings
 1. Prefer iterators over the temporary buffers (if performance is the goal). Be careful, this would make code pretty 

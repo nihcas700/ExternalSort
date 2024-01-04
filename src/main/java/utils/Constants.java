@@ -16,6 +16,7 @@ public class Constants {
     public static final String PARALLEL_MS = "PARALLEL_MERGE_SORT";
     public static final String SEQUENTIAL_MS = "SEQUENTIAL_MERGE_SORT";
     public static final String SEQUENTIAL_QS = "SEQUENTIAL_QUICK_SORT";
+    public static final String COLLECTIONS_PS = "COLLECTIONS_SORT";
     // -----------Configuration End
 
     public static final String INPUT_FILE_PATH_STR = Paths.get(WORKING_DIR, INPUT_FILE_NAME).toString();

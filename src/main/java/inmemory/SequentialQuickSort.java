@@ -13,8 +13,7 @@ public class SequentialQuickSort implements SortingAlgorithm {
     private Logger log = LOGGER;
     @Override
     public void sort(List<Integer> list) {
-//        sort(list, 0, list.size() - 1, new Random());
-        Collections.sort(list);
+        sort(list, 0, list.size() - 1, new Random());
     }
 
     private void sort(List<Integer> list, int start, int end, Random random) {
