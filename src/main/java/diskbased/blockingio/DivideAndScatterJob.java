@@ -32,7 +32,6 @@ public class DivideAndScatterJob {
 
     public void divideAndScatter(String intermediateFilePath, String inputFilePath) throws IOException {
         long start = System.currentTimeMillis();
-//        BufferedReader reader = new BufferedReader(new FileReader(inputFilePath), inputChunkSize);
         RandomAccessFile file = new RandomAccessFile(inputFilePath, "rw");
         FileChannel channel = file.getChannel();
         ByteBuffer buffer = ByteBuffer.allocate(2048);
@@ -41,10 +40,9 @@ public class DivideAndScatterJob {
         List<Integer> list = new ArrayList<>();
         Map<String, ThreadMetadata> threadMetadata = new LinkedHashMap<>();
         while (true) {
-//            String line = reader.readLine();
             int bytesRead = channel.read(buffer, pos);
             buffer.flip();
-            currNo = convertToInt(buffer, currNo, list);
+            currNo = Utils.convertToInt(buffer, currNo, list);
             pos += bytesRead;
             buffer.clear();
             if ((!list.isEmpty() && (list.size() > inputChunkSize)) || bytesRead <= 0) {
@@ -66,20 +64,6 @@ public class DivideAndScatterJob {
         log.info("[divideAndSort] Divide and sort took " + (end - start) + " millis");
     }
 
-    private int convertToInt(ByteBuffer data, int initial,
-                             List<Integer> list) {
-        int currNo = initial;
-        while (data.hasRemaining()) {
-            char ch = (char) (data.get() & 0xFF);
-            if (ch == '\n') {
-                list.add(currNo);
-                currNo = 0;
-            } else {
-                currNo = (currNo * 10) + (ch - '0');
-            }
-        }
-        return currNo;
-    }
 
     private CompletableFuture<Object> getSortAndFlushFuture(BufferedWriter writer, List<Integer> list, ThreadMetadata metadata) {
         SortAndFlush sortAndFlush = new SortAndFlush(writer, list, Utils.getSortingAlgorithm(sortImpl), metadata);

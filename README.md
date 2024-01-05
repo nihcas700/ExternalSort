@@ -66,6 +66,14 @@ Similar to Optimization 3.
 | Optimization 4 | 311.465 seconds (5.19 minutes) |
 | Optimization 5 | 302.571 seconds (5.04 minutes) |
 
+### Optimization 6 - Switch to NIO (buffer-based IO) instead of IO streams (Stream-based IO) 
+Note: This is done only in divide and scatter step yet. 
+
+| Optimizations  | Runtimes                       |
+|----------------|--------------------------------|
+| Optimization 5 | 291.070 (4.85 minutes)         |
+| Optimization 6 | 302.571 seconds (5.04 minutes) |
+
 ### Optimizations that did not work
 
 ###### Compression of intermediate files' outputs

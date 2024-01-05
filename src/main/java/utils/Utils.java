@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -144,6 +145,21 @@ public class Utils {
         log.info("Exception Occurred in " + metadata.getFileName());
         ex.printStackTrace();
         return null;
+    }
+
+    public static int convertToInt(ByteBuffer data, int initial,
+                                   List<Integer> list) {
+        int currNo = initial;
+        while (data.hasRemaining()) {
+            char ch = (char) (data.get() & 0xFF);
+            if (ch == '\n') {
+                list.add(currNo);
+                currNo = 0;
+            } else {
+                currNo = (currNo * 10) + (ch - '0');
+            }
+        }
+        return currNo;
     }
 
     public static void waitForThreadsToComplete(Map<String, ThreadMetadata> threadMetadata, final int layer, Logger log) {
