@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Constants {
-    public static final String WORKING_DIR = "./src/test/java/diskbased";
+    public static final String WORKING_DIR = ".";
     public static final String INPUT_FILE_NAME = "input.txt";
     public static final String OUTPUT_FILE_NAME = "output.txt";
     public static final String INTERMEDIATE_DIR = "intermediate";

@@ -12,18 +12,21 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 import static utils.FileUtility.*;
 
 public class GatherAndMergeJob {
     private int inputChunkSize;
     private int outputBufferSize;
+    private Executor executor;
     private static final Logger LOGGER = LogManager.getLogger(GatherAndMergeJob.class);
     private Logger log = LOGGER;
 
-    public GatherAndMergeJob(final int inputChunkSize, final int outputBufferSize) {
+    public GatherAndMergeJob(final int inputChunkSize, final int outputBufferSize, final Executor executor) {
         this.inputChunkSize = inputChunkSize;
         this.outputBufferSize = outputBufferSize;
+        this.executor = executor;
     }
 
     public void gatherAndMerge(final String intermediateFilePath, final String finalOutputPath, int K) throws Exception {
@@ -51,7 +54,7 @@ public class GatherAndMergeJob {
                 ThreadMetadata metadata = new ThreadMetadata();
                 metadata.setFileName(outputFileName);
                 threadMetadata.put(outputFileName, metadata);
-                metadata.setFuture(getMergeSortedFuture(readers, writer, metadata));
+                metadata.setFuture(getMergeSortedFuture(readers, writer, metadata, executor));
                 fileNo++;
             }
             Utils.waitForThreadsToComplete(threadMetadata, layer, log);
@@ -61,8 +64,9 @@ public class GatherAndMergeJob {
         log.info("[mergeAndSort] Merge and sort took " + (end - start) + " millis");
     }
 
-    public CompletableFuture<Object> getMergeSortedFuture(List<BufferedReader> readers, BufferedWriter writer, ThreadMetadata metadata) {
-        return CompletableFuture.runAsync(new MergeSortedAndFlushKway(readers, writer, metadata))
+    public CompletableFuture<Object> getMergeSortedFuture(List<BufferedReader> readers, BufferedWriter writer,
+                                                          ThreadMetadata metadata, Executor executor) {
+        return CompletableFuture.runAsync(new MergeSortedAndFlushKway(readers, writer, metadata), executor)
                 .exceptionally((ex) -> Utils.printException(metadata, ex, log))
                 .thenApply((result) -> Utils.printThreadMetadataDetails(metadata, log));
     }

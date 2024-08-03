@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 import static utils.FileUtility.getIntermediateFileName;
 
@@ -21,13 +22,15 @@ public class DivideAndScatterJob {
     private int inputChunkSize;
     private String sortImpl;
     private int outputBufferSize;
+    private Executor executor;
     private static final Logger LOGGER = LogManager.getLogger(DivideAndScatterJob.class);
     private Logger log = LOGGER;
 
-    public DivideAndScatterJob(final int inputChunkSize, String sortImpl, final int outputBufferSize) {
+    public DivideAndScatterJob(final int inputChunkSize, String sortImpl, final int outputBufferSize, final Executor executor) {
         this.inputChunkSize = inputChunkSize;
         this.sortImpl = sortImpl;
         this.outputBufferSize = outputBufferSize;
+        this.executor = executor;
     }
 
     public void divideAndScatter(String intermediateFilePath, String inputFilePath) throws IOException {
@@ -67,7 +70,7 @@ public class DivideAndScatterJob {
 
     private CompletableFuture<Object> getSortAndFlushFuture(BufferedWriter writer, List<Integer> list, ThreadMetadata metadata) {
         SortAndFlush sortAndFlush = new SortAndFlush(writer, list, Utils.getSortingAlgorithm(sortImpl), metadata);
-        return CompletableFuture.runAsync(sortAndFlush)
+        return CompletableFuture.runAsync(sortAndFlush, executor)
                 .exceptionally((ex) -> Utils.printException(metadata, ex, log))
                 .thenApply((result) -> Utils.printThreadMetadataDetails(metadata, log));
     }

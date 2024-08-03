@@ -4,6 +4,9 @@ import diskbased.ExternalSort;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 public class ExternalSortBlockingIO implements ExternalSort {
     private static final Logger LOGGER = LogManager.getLogger(ExternalSortBlockingIO.class);
     private Logger log = LOGGER;
@@ -19,10 +22,12 @@ public class ExternalSortBlockingIO implements ExternalSort {
 
     @Override
     public void sort(final String intermediateFilePath, String inputFilePath, String outputPath, int K) throws Exception {
-        DivideAndScatterJob dsJob = new DivideAndScatterJob(inputChunkSize, sortImpl, outputBufferSize);
+        Executor executor = Executors.newWorkStealingPool();
+        DivideAndScatterJob dsJob = new DivideAndScatterJob(inputChunkSize, sortImpl, outputBufferSize,
+                executor);
         dsJob.divideAndScatter(intermediateFilePath, inputFilePath);
 
-        GatherAndMergeJob gmJob = new GatherAndMergeJob(inputChunkSize, outputBufferSize);
+        GatherAndMergeJob gmJob = new GatherAndMergeJob(inputChunkSize, outputBufferSize, executor);
         gmJob.gatherAndMerge(intermediateFilePath, outputPath, K);
     }
 }

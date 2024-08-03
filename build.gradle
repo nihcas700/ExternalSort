@@ -21,7 +21,28 @@ test {
     useJUnitPlatform()
     minHeapSize = "128m" // initial heap size
     maxHeapSize = "4096m" // maximum heap size
-//    jvmArgs '-XX:MaxPermSize=256m' // mem argument for the test JVM
+}
+
+mainClassName = 'Main'
+sourceSets {
+    main {
+        java {
+            srcDirs 'src/main/java', 'src/main/resources'
+        }
+    }
+}
+
+jar{
+    manifest {
+        attributes("Main-Class": "$mainClassName",)
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn ('dependencies')
 }
 
 application {
