@@ -1,5 +1,6 @@
 import diskbased.ExternalSort;
 import diskbased.blockingio.ExternalSortBlockingIO;
+import diskbased.spark.SparkExternalSort;
 import utils.Constants;
 
 import java.io.*;
@@ -24,6 +25,8 @@ public class Main {
             ExternalSort externalSort = null;
             if (argList.contains("runBlockingIO")) {
                 externalSort = new ExternalSortBlockingIO(INPUT_CHUNK_SIZE, OUTPUT_BUFFER_SIZE, COLLECTIONS_PS);
+            } else if (argList.contains("runSpark")) {
+                externalSort = new SparkExternalSort();
             } else {
                 System.out.println("Unknown External Sort Implementation. Test Failed!!!");
                 System.exit(1);
@@ -80,6 +83,7 @@ public class Main {
                 }
             });
         }
+        Files.deleteIfExists(OUTPUT_FILE_PATH);
         System.out.println("Done Clearing intermediate directory");
     }
 
@@ -87,9 +91,8 @@ public class Main {
         new File(WORKING_DIR).mkdir();
         new File(INTERMEDIATE_PATH_STR).mkdir();
         new File(Constants.INPUT_FILE_PATH_STR).createNewFile();
-        new File(Constants.OUTPUT_FILE_PATH_STR).createNewFile();
         BufferedWriter writer = new BufferedWriter(new FileWriter(Constants.INPUT_FILE_PATH_STR), 1000000);
-        long size = 1000000000L;
+        long size = 100000000L;
         int maxInteger = 1000000;
         int[] map = new int[maxInteger+1];
         Random random = new Random();

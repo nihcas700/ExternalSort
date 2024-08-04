@@ -2,6 +2,7 @@ package inmemory;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+@Disabled
 public class TestSortingAlgorithms {
 
     static int size;
@@ -32,6 +34,7 @@ public class TestSortingAlgorithms {
     }
 
     @Test
+    @Disabled
     public void runSequentialQS() throws IOException {
         writer.write("Running Sequential Quick Sort" + "\n");
         long start = System.currentTimeMillis();

@@ -20,7 +20,8 @@ public class Constants {
     // -----------Configuration End
 
     public static final String INPUT_FILE_PATH_STR = Paths.get(WORKING_DIR, INPUT_FILE_NAME).toString();
-    public static final String OUTPUT_FILE_PATH_STR = Paths.get(WORKING_DIR, OUTPUT_FILE_NAME).toString();
+    public static final Path OUTPUT_FILE_PATH = Paths.get(WORKING_DIR, OUTPUT_FILE_NAME);
+    public static final String OUTPUT_FILE_PATH_STR = OUTPUT_FILE_PATH.toString();
     public static final String INTERMEDIATE_PATH_STR = Paths.get(WORKING_DIR, INTERMEDIATE_DIR).toString();
     public static final Path INTERMEDIATE_PATH = Paths.get(WORKING_DIR, INTERMEDIATE_DIR);
 }

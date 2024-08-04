@@ -49,3 +49,7 @@ logs/
 id_rsa_personal*
 
 sample*.txt
+intermediate/
+input.txt
+output.txt
+.idea/
