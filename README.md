@@ -1,4 +1,4 @@
-This project contains the implementations of in-memory and diskbased sorting algorithms and compares their runtimes across 
+This project contains the implementations of the diskbased sorting algorithms and compares their runtimes across 
 various optimizations. The code was run on a machine with 8-core CPU with 32 GB RAM with macOS 14.2 .
 
 # External Sort
@@ -6,7 +6,30 @@ various optimizations. The code was run on a machine with 8-core CPU with 32 GB 
 [This package](https://github.com/nihcas700/ExternalSort/tree/master/src/main/java/diskbased) contains the following implementations
 
 1. External Sort with blocking IO - K-way merge (different values of K)
-2. [Upcoming] External Sort with Async IO.
+2. External Sort using Spark 
+3. [Upcoming] External Sort with Async IO.
+
+# Comparisons
+
+| Number of integers | External Sort with <br/>blocking IO | Spark            |
+|--------------------|-------------------------------------|------------------|
+| 10^8               | 37.989 seconds                      | 222.315 seconds  |
+
+## [Details] External Sort with blocking IO
+
+Execute following commands in the project dir to run this job :- 
+```
+./gradlew build
+
+docker build -f Dockerfile.spark -t external_sort_spark .
+
+docker build -f Dockerfile.blocking -t external_sort_blocking .
+
+docker run external_sort_spark
+
+docker run external_sort_blocking
+
+```
 
 The algorithms are run on an input file containing 10^9 integers, and their runtimes are as follows :-
 
@@ -83,6 +106,11 @@ Note: This is done only in divide and scatter step yet.
    However, it performed poorly in this External sort setup due to so many parallel tasks fighting for the CPU and the associated
    context switching involved with so many threads spawned up.
 
-# Learnings
+### Learnings
 1. Prefer iterators over the temporary buffers (if performance is the goal). Be careful, this would make code pretty 
 hard to read.
+2. Prefer to use work stealing threadpool that ForkJoinPool framework introduced.
+
+## [Details] Spark implementation
+Here, we used RDD to read the input file, sort the integers and coalesce'd it into a single partition in order to 
+output entire data to a single output file.
