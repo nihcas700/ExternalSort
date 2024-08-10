@@ -92,7 +92,7 @@ public class Main {
         new File(INTERMEDIATE_PATH_STR).mkdir();
         new File(Constants.INPUT_FILE_PATH_STR).createNewFile();
         BufferedWriter writer = new BufferedWriter(new FileWriter(Constants.INPUT_FILE_PATH_STR), 1000000);
-        long size = 100000000L;
+        long size = 1000000000L;
         int maxInteger = 1000000;
         int[] map = new int[maxInteger+1];
         Random random = new Random();

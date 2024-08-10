@@ -5,6 +5,11 @@ RUN sh -c 'touch Sorting-1.0-SNAPSHOT.jar'
 ENTRYPOINT ["java", "-Xmx4096M", \
             "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED", \
             "--add-exports=java.base/sun.security.action=ALL-UNNAMED", \
+            "--add-opens=java.base/java.nio.charset=ALL-UNNAMED", \
+            "--add-opens=java.base/java.nio=ALL-UNNAMED", \
+            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", \
+            "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", \
+            "--add-opens=java.base/java.util=ALL-UNNAMED", \
             "-Dcom.sun.management.jmxremote=true", \
             "-Dcom.sun.management.jmxremote.port=5005", \
             "-Dcom.sun.management.jmxremote.local.only=false", \

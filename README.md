@@ -11,9 +11,9 @@ various optimizations. The code was run on a machine with 8-core CPU with 32 GB 
 
 # Comparisons
 
-| Number of integers | External Sort with <br/>blocking IO | Spark            |
-|--------------------|-------------------------------------|------------------|
-| 10^8               | 37.989 seconds                      | 222.315 seconds  |
+| Number of integers | External Sort with <br/>blocking IO | Spark (Dataframe) |
+|--------------------|-------------------------------------|-------------------|
+| 10^9               | 417.441 seconds                     | 714.875 seconds   |
 
 ## [Details] External Sort with blocking IO
 
@@ -112,5 +112,7 @@ hard to read.
 2. Prefer to use work stealing threadpool that ForkJoinPool framework introduced.
 
 ## [Details] Spark implementation
-Here, we used RDD to read the input file, sort the integers and coalesce'd it into a single partition in order to 
-output entire data to a single output file.
+Here, we first used RDD to read the input file, sort the integers and coalesce'd it into a single partition in order to 
+output entire data to a single output file. It performed very poorly, so we switched to using dataframe, the result of 
+which is mentioned above. We are trying to find the reason behind RDD's poor performance in order to be able to further 
+optimize it using Spark.
